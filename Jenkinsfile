@@ -16,7 +16,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo "Cloning Repository..."
-                git 'https://github.com/your-username/shopfusion.git'
+                git 'https://github.com/shopfusion-tech/ShopFusion.git'
             }
         }
 
