@@ -37,21 +37,19 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                echo "Stopping old application if running..."
+    stage('Deploy') {
+        steps {
+            script {
+                def jarPath = "${env.WORKSPACE}/target/shopfusion-0.0.1-SNAPSHOT.jar"
 
-                sh '''
+                sh """
                 if pgrep -f shopfusion; then
                     pkill -f shopfusion
                 fi
-                '''
 
-                echo "Starting new application on port 9090..."
-
-                sh '''
-                nohup java -jar ${JAR_FILE} > app.log 2>&1 &
-                '''
+                nohup java -jar -Dserver.port=9090 ${jarPath} > ${env.WORKSPACE}/app.log 2>&1 &
+                """
+                }
             }
         }
     }
