@@ -2,21 +2,24 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK17'        // Must match Global Tool Configuration name
-        maven 'Maven3'     // Must match Global Tool Configuration name
+        jdk 'JDK17'
+        maven 'Maven3'
     }
 
     environment {
         APP_NAME = "shopfusion"
         JAR_FILE = "target/shopfusion-0.0.1-SNAPSHOT.jar"
+        GIT_BRANCH = "develop"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo "Cloning Repository..."
-                git 'https://github.com/shopfusion-tech/ShopFusion.git'
+                echo "Cloning ${GIT_BRANCH} branch..."
+
+                git branch: "${GIT_BRANCH}",
+                    url: 'https://github.com/shopfusion-tech/ShopFusion.git'
             }
         }
 
@@ -55,7 +58,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ ShopFusion deployed successfully on port 9090"
+            echo "✅ ShopFusion (develop branch) deployed successfully on port 9090"
         }
         failure {
             echo "❌ Build Failed"
