@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>ShopFusion</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<header>
+    <h1 th:text="${appName} + ' - Spring Boot Shopping Store'"></h1>
+</header>
+
+<div class="container">
+    <div class="card" th:each="product : ${products}">
+        <h3 th:text="${product.name}"></h3>
+        <p>₹ <span th:text="${product.price}"></span></p>
+        <button>Add to Cart</button>
+    </div>
+</div>
+
+</body>
+</html>
