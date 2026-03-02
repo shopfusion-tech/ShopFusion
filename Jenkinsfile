@@ -1,18 +1,19 @@
 pipeline {
     agent any
 
-    environment {
-        APP_NAME = "shopfusion"
+    tools {
+        jdk 'JDK17'        // Must match Global Tool Configuration name
+        maven 'Maven3'     // Must match Global Tool Configuration name
     }
 
-    tools {
-        maven "Maven"   // Name must match Jenkins Global Tool Config
-        jdk "JDK17"
+    environment {
+        APP_NAME = "shopfusion"
+        JAR_FILE = "target/shopfusion-0.0.1-SNAPSHOT.jar"
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
                 echo "Cloning Repository..."
                 git 'https://github.com/your-username/shopfusion.git'
@@ -22,7 +23,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building Application..."
-                sh 'mvn clean package'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
@@ -35,11 +36,18 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo "Deploying Application..."
+                echo "Stopping old application if running..."
 
                 sh '''
-                pkill -f shopfusion || true
-                nohup java -jar target/shopfusion-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+                if pgrep -f shopfusion; then
+                    pkill -f shopfusion
+                fi
+                '''
+
+                echo "Starting new application on port 9090..."
+
+                sh '''
+                nohup java -jar ${JAR_FILE} > app.log 2>&1 &
                 '''
             }
         }
@@ -47,10 +55,10 @@ pipeline {
 
     post {
         success {
-            echo "Application Deployed Successfully on Port 9090"
+            echo "✅ ShopFusion deployed successfully on port 9090"
         }
         failure {
-            echo "Build Failed"
+            echo "❌ Build Failed"
         }
     }
 }
