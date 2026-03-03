@@ -18,7 +18,8 @@ public class ProductController {
                 new Product("Wireless Headphones", 2999),
                 new Product("Smart Watch", 3999),
                 new Product("Gaming Mouse", 2999),
-                new Product("Laptop Backpack", 54499)
+                new Product("Laptop Backpack", 54499),
+                new Product("Iphone 17 Pro ", 64499)
         );
 
         model.addAttribute("products", products);

@@ -60,9 +60,11 @@ pipeline {
                     sleep 5
 
                     ps -p \$(cat ${env.WORKSPACE}/app.pid) || exit 1
-                    sleep 5
-                    sudo systemctl restart shopfusion
-
+                        sh """
+                            echo "Restarting shopfusion service..."
+                            sudo systemctl restart shopfusion
+                            sudo systemctl status shopfusion
+                            """
                     echo "Application started successfully."
                     """
                 }
