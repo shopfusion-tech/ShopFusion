@@ -9,9 +9,7 @@ pipeline {
     environment {
         GIT_REPO = "https://github.com/shopfusion-tech/ShopFusion.git"
         GIT_BRANCH = "develop"
-        APP_NAME = "shopfusion"
         PORT = "9090"
-        LOG_FILE = "/var/log/shopfusion.log"
     }
 
     stages {
@@ -47,33 +45,27 @@ pipeline {
                     def javaBin = "${javaHome}/bin/java"
 
                     sh """
-                    echo "===================================="
-                    echo "Deploying ${APP_NAME}"
-                    echo "===================================="
-
-                    echo "Running as user:"
-                    whoami
-
                     echo "Stopping old application if running..."
                     pkill -f ${jarPath} || true
                     sleep 3
 
-                    echo "Starting application on port ${PORT}..."
+                    echo "Starting application via Jenkins..."
 
-                    # Detach from Jenkins completely
-                    setsid ${javaBin} -Dserver.port=${PORT} -jar ${jarPath} \
-                    > ${LOG_FILE} 2>&1 < /dev/null &
+                    # VERY IMPORTANT - Prevent Jenkins from killing process
+                    export BUILD_ID=dontKillMe
 
-                    sleep 8
+                    nohup ${javaBin} \
+                    -Dserver.port=${PORT} \
+                    -Dserver.address=0.0.0.0 \
+                    -jar ${jarPath} \
+                    > /tmp/shopfusion.log 2>&1 &
 
-                    echo "Checking if application started..."
+                    sleep 6
 
-                    ps -ef | grep ${jarPath} | grep -v grep && echo "✅ Application is running" || (echo "❌ Application failed to start"; exit 1)
+                    echo "Verifying application process..."
+                    ps -ef | grep ${jarPath} | grep -v grep || exit 1
 
-                    echo "Checking port status..."
-                    netstat -tulnp | grep ${PORT} || echo "⚠️ Port ${PORT} not listening"
-
-                    echo "Deployment completed."
+                    echo "Application started successfully."
                     """
                 }
             }
@@ -82,10 +74,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ ShopFusion deployed successfully on port ${PORT}"
+            echo "✅ ShopFusion deployed and running on port ${PORT}"
         }
         failure {
-            echo "❌ Deployment failed. Check logs: ${LOG_FILE}"
+            echo "❌ Deployment failed. Check /tmp/shopfusion.log"
         }
     }
 }
