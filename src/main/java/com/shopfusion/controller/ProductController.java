@@ -18,7 +18,7 @@ public class ProductController {
                 new Product("Wireless Headphones", 2999),
                 new Product("Smart Watch", 4999),
                 new Product("Gaming Mouse", 1999),
-                new Product("Laptop Backpack", 5499)
+                new Product("Laptop Backpack", 54499)
         );
 
         model.addAttribute("products", products);
