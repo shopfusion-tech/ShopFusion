@@ -16,7 +16,7 @@ public class ProductController {
 
         List<Product> products = Arrays.asList(
                 new Product("Wireless Headphones", 2999),
-                new Product("Smart Watch", 4999),
+                new Product("Smart Watch", 3999),
                 new Product("Gaming Mouse", 2999),
                 new Product("Laptop Backpack", 54499)
         );
