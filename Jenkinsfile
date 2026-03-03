@@ -37,39 +37,35 @@ pipeline {
         }
 
         stage('Deploy') {
-            steps {
-                script {
+    steps {
+        script {
 
-                    def jarPath = "${env.WORKSPACE}/target/shopfusion-0.0.1-SNAPSHOT.jar"
-                    def javaHome = tool 'JDK17'
-                    def javaBin = "${javaHome}/bin/java"
+            def jarPath = "${env.WORKSPACE}/target/shopfusion-0.0.1-SNAPSHOT.jar"
+            def javaBin = "/bin/java"
 
-                    sh """
-                    echo "Stopping old application if running..."
-                    pkill -f ${jarPath} || true
-                    sleep 3
+            sh """
+            echo "Stopping old app..."
+            pkill -f ${jarPath} || true
+            sleep 3
 
-                    echo "Starting application via Jenkins..."
+            echo "Starting application fully detached..."
 
-                    # VERY IMPORTANT - Prevent Jenkins from killing process
-                    export BUILD_ID=dontKillMe
+            setsid env BUILD_ID=dontKillMe \
+            nohup ${javaBin} \
+            -Dserver.port=9090 \
+            -Dserver.address=0.0.0.0 \
+            -jar ${jarPath} \
+            > /tmp/shopfusion.log 2>&1 < /dev/null &
 
-                    nohup ${javaBin} \
-                    -Dserver.port=${PORT} \
-                    -Dserver.address=0.0.0.0 \
-                    -jar ${jarPath} \
-                    > /tmp/shopfusion.log 2>&1 &
+            sleep 5
 
-                    sleep 6
+            ps -ef | grep ${jarPath} | grep -v grep || exit 1
 
-                    echo "Verifying application process..."
-                    ps -ef | grep ${jarPath} | grep -v grep || exit 1
-
-                    echo "Application started successfully."
-                    """
-                }
-            }
+            echo "Application started and detached successfully."
+            """
         }
+    }
+}
     }
 
     post {
