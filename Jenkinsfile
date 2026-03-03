@@ -10,13 +10,13 @@ pipeline {
         GIT_REPO = "https://github.com/shopfusion-tech/ShopFusion.git"
         GIT_BRANCH = "develop"
         PORT = "9090"
+        APP_NAME = "shopfusion"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo "Cloning ${GIT_BRANCH} branch..."
                 git branch: "${GIT_BRANCH}",
                     url: "${GIT_REPO}"
             }
@@ -24,56 +24,56 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo "Building application..."
                 sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Test') {
             steps {
-                echo "Running tests..."
                 sh 'mvn test'
             }
         }
 
         stage('Deploy') {
-    steps {
-        script {
+            steps {
+                script {
 
-            def jarPath = "${env.WORKSPACE}/target/shopfusion-0.0.1-SNAPSHOT.jar"
-            def javaBin = "/bin/java"
+                    def jarPath = "${env.WORKSPACE}/target/shopfusion-0.0.1-SNAPSHOT.jar"
+                    def logPath = "/var/log/shopfusion.log"
+                    def javaBin = tool name: 'JDK17', type: 'jdk'
 
-            sh """
-            echo "Stopping old app..."
-            pkill -f ${jarPath} || true
-            sleep 3
+                    sh """
+                    echo "Stopping old application..."
+                    pkill -f ${jarPath} || true
+                    sleep 3
 
-            echo "Starting application fully detached..."
+                    echo "Starting new application..."
 
-            setsid env BUILD_ID=dontKillMe \
-            nohup ${javaBin} \
-            -Dserver.port=9090 \
-            -Dserver.address=0.0.0.0 \
-            -jar ${jarPath} \
-            > /tmp/shopfusion.log 2>&1 < /dev/null &
+                    nohup ${javaBin}/bin/java \
+                    -Dserver.port=${PORT} \
+                    -Dserver.address=0.0.0.0 \
+                    -jar ${jarPath} \
+                    > ${logPath} 2>&1 &
 
-            sleep 5
+                    echo \$! > ${env.WORKSPACE}/app.pid
 
-            ps -ef | grep ${jarPath} | grep -v grep || exit 1
+                    sleep 5
 
-            echo "Application started and detached successfully."
-            """
+                    ps -p \$(cat ${env.WORKSPACE}/app.pid) || exit 1
+
+                    echo "Application started successfully."
+                    """
+                }
+            }
         }
-    }
-}
     }
 
     post {
         success {
-            echo "✅ ShopFusion deployed and running on port ${PORT}"
+            echo "✅ ShopFusion deployed successfully on port ${PORT}"
         }
         failure {
-            echo "❌ Deployment failed. Check /tmp/shopfusion.log"
+            echo "❌ Deployment failed. Check logs at /var/log/shopfusion.log"
         }
     }
 }
